@@ -54,7 +54,6 @@ namespace skeleton {
 		token_char_literal, // 'j'
 	};
 
-
 	struct token {
 		token_id id;
 
@@ -67,6 +66,13 @@ namespace skeleton {
 		size_t col;
 	};
 
+	struct lexer_error {
+		size_t pos;
+		size_t line;
+		size_t col;
+		std::string msg;
+	};
+
 	struct lexer {
 		std::string source;
 		size_t pos;
@@ -74,31 +80,91 @@ namespace skeleton {
 		size_t col;
 
 		std::vector<token> tokens;
+		std::vector<lexer_error> errors;
 	};
 
+	inline
+	bool is_eof(const lexer& the_lexer) {
+		return the_lexer.pos < the_lexer.source.length();
+	}
+
+	inline
+	char get_char(const lexer& the_lexer) {
+		assert(!is_eof(the_lexer));
+		return the_lexer.source[the_lexer.pos];
+	}
+
+	inline
+	void advance(lexer& the_lexer, char c) {
+		if(c == '\n') {
+			++the_lexer.line;
+			the_lexer.col = 1;
+		} else if(c == '\t') {
+			the_lexer.col += 4;
+		} else {
+			++the_lexer.col;
+		}
+		++the_lexer.pos;
+	}
+	inline
 	void advance(lexer& the_lexer) {
-		++the_lexer.pos;
-		++the_lexer.col;
-	}
-	void advanceln(lexer& the_lexer) {
-		++the_lexer.pos;
-		++the_lexer.line;
-		the_lexer.col = 1;
-	}
-	void advancetab(lexer& the_lexer) {
-		++the_lexer.pos;
-		the_lexer.col += 4;
+		char c = get_char(the_lexer);
+		advance(the_lexer, c);
 	}
 
 	void lex_single_line_comment(lexer& the_lexer) {
-		char c = the_lexer.source[the_lexer.pos];
-		while(c == ' ' || c == '\t') {
-			if(c == ' ') {
+		while(!is_eof(the_lexer)) {
+			char c = get_char(the_lexer);
+			advance(the_lexer, c);
 
+			if(c == '\r') {
+				if(!is_eof(the_lexer)) {
+					char c2 = get_char(the_lexer);
+					if(c2 == '\n') {
+						advance(the_lexer, c2);
+						return;
+					}
+				}
 			}
-
-			c = the_lexer.source[the_lexer.pos];
+			if(c == '\n') {
+				advance(the_lexer, c);
+				return;
+			}
 		}
+	}
+
+	void lex_multi_line_comment(lexer& the_lexer) {
+		assert(the_lexer.col >= 3);
+
+		auto begin_pos = the_lexer.pos;
+		auto begin_line = the_lexer.line;
+		auto begin_col = the_lexer.col - 2;
+
+		while(!is_eof(the_lexer)) {
+			char c = get_char(the_lexer);
+			advance(the_lexer, c);
+
+			if(c == '/' && !is_eof(the_lexer)) {
+				char c2 = get_char(the_lexer);
+				advance(the_lexer, c2);
+				if(c2 == '*') {
+					lex_multi_line_comment(the_lexer);
+				}
+			} else if(c == '*' && !is_eof(the_lexer)) {
+				char c2 = get_char(the_lexer);
+				advance(the_lexer, c2);
+				if(c2 == '/') {
+					return;
+				}
+			}
+		}
+
+		lexer_error err;
+		err.pos = begin_pos;
+		err.line = begin_line;
+		err.col = begin.col;
+		err.msg = "Unmatched opening of multi-line comment.";
+		the_lexer.errors.push_back(err);
 	}
 
 	lexer lex(std::string str) {
