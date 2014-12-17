@@ -143,6 +143,18 @@ namespace skeleton {
 			result += "[Float '";
 			result += to_string(tok.identifier_name);
 			result += "']";
+		} else if(tok.id == token_string_literal) {
+			result += "[String '";
+			result += to_string(tok.identifier_name);
+			result += "']";
+		} else if(tok.id == token_char_literal) {
+			result += "[Char '";
+			result += to_string(tok.identifier_name);
+			result += "']";
+		} else if(tok.id == token_bool_literal) {
+			result += "[Bool '";
+			result += to_string(tok.identifier_name);
+			result += "']";
 		} else {
 			result += "['";
 			result += token_names[tok.id];
@@ -185,9 +197,10 @@ namespace skeleton {
 
 	inline
 	void lexer_add_keywords(lexer& the_lexer) {
-		the_lexer.keywords.reserve(11);
+		the_lexer.keywords.reserve(14);
 		lexer_add_keyword(the_lexer, "def", token_def);
 		lexer_add_keyword(the_lexer, "import", token_import);
+		lexer_add_keyword(the_lexer, "for", token_for);
 		lexer_add_keyword(the_lexer, "struct", token_struct);
 		lexer_add_keyword(the_lexer, "using", token_using);
 		lexer_add_keyword(the_lexer, "yield", token_yield);
@@ -198,6 +211,8 @@ namespace skeleton {
 		lexer_add_keyword(the_lexer, "mutable", token_mutable);
 		lexer_add_keyword(the_lexer, "while", token_while);
 		lexer_add_keyword(the_lexer, "enum", token_enum);
+		lexer_add_keyword(the_lexer, "false", token_bool_literal);
+		lexer_add_keyword(the_lexer, "true", token_bool_literal);
 	}
 
 	inline
@@ -568,6 +583,90 @@ namespace skeleton {
 		lexer_add_token(the_lexer, tok);		
 	}
 
+	void lex_string_literal(lexer& the_lexer) {
+		char pre = get_char(the_lexer);
+		assert(pre == '\"');
+
+		advance(the_lexer, pre);
+
+		token tok;
+		tok.pos = the_lexer.pos;
+		tok.line = the_lexer.line;
+		tok.col = the_lexer.col;
+
+		while(!is_eof(the_lexer)) {
+			char c = get_char(the_lexer);
+			if(c == '\"')
+				break;
+
+			advance(the_lexer, c);
+		}
+
+		tok.id = token_string_literal;
+		tok.identifier_name = slice(the_lexer.source, tok.pos, the_lexer.pos - tok.pos);
+
+		char post = '\0';
+		if(!is_eof(the_lexer)) {
+			post = get_char(the_lexer);
+			advance(the_lexer, post);
+		}
+
+		if(post != '\"') {
+			lexer_error err;
+			err.pos = tok.pos;
+			err.line = tok.line;
+			err.col = tok.col;
+			err.msg = "Unmatched opening of string literal.";
+
+			the_lexer.errors.push_back(err);
+		} else {
+			the_lexer.tokens.push_back(tok);
+		}
+	}
+
+	void lex_char_literal(lexer& the_lexer) {
+		char pre = get_char(the_lexer);
+		assert(pre == '\'');
+
+		advance(the_lexer, pre);
+
+		token tok;
+		tok.pos = the_lexer.pos;
+		tok.line = the_lexer.line;
+		tok.col = the_lexer.col;
+
+		if(is_eof(the_lexer)) {
+			lexer_error err;
+			err.pos = tok.pos;
+			err.line = tok.line;
+			err.col = tok.col;
+			err.msg = "Unmatched opening of char literal.";
+
+			the_lexer.errors.push_back(err);
+			return;
+		}
+
+		advance(the_lexer);
+
+		if(is_eof(the_lexer) || get_char(the_lexer) != '\'') {
+			lexer_error err;
+			err.pos = tok.pos;
+			err.line = tok.line;
+			err.col = tok.col;
+			err.msg = "Unmatched opening of char literal.";
+
+			the_lexer.errors.push_back(err);
+			return;
+		}
+
+		tok.id = token_char_literal;
+		tok.identifier_name = slice(the_lexer.source, tok.pos, the_lexer.pos - tok.pos);
+
+		the_lexer.tokens.push_back(tok);
+
+		advance(the_lexer, '\'');
+	}
+
 	inline
 	lexer lex(std::string str) {
 		lexer res;
@@ -675,12 +774,12 @@ namespace skeleton {
 
 				//String literals
 				case '\"':
-					advance(res, c);
+					lex_string_literal(res);
 					break;
 
 				//Character literals
 				case '\'':
-					advance(res, c);
+					lex_char_literal(res);
 					break;
 
 				//Operators
