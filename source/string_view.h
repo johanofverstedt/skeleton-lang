@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <stdint.h>
 #include <assert.h>
 
 namespace skeleton {
@@ -83,5 +84,18 @@ namespace skeleton {
 		assert(s.length() >= pos + length);
 
 		return slice(s.c_str(), pos, length);
+	}
+
+	int64_t to_int(const string_view& sv) {
+		return 0;
+	}
+
+	uint64_t to_uint(const string_view& sv) {
+		return 0U;
+	}
+
+	long double to_long_double(const string_view& sv) {
+		long double x = 0.0;
+		return x;
 	}
 }
