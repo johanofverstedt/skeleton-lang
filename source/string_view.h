@@ -26,9 +26,9 @@ namespace skeleton {
 		}
 		return hc;
 	}
-
+/*
 	string_view& add(string_hash_map& hm, const string_view& sv) {
-		auto hc = hash(sv) & 65535;
+		auto hc = hash(sv.ptr, sv.length) & 65535;
 
 		if(data[hc].ptr) {
 			if(compare(data[hc], sv)) {
@@ -36,11 +36,11 @@ namespace skeleton {
 			}
 		}
 	}
-
+*/
 	bool compare(const string_view& x, const string_view& y) {
 		if(x.hash != y.hash)
 			return false;
-		
+
 		auto x_len = x.length;
 		if(x_len != y.length)
 			return false;
@@ -53,6 +53,7 @@ namespace skeleton {
 		return true;
 	}
 
+	inline
 	size_t length(const string_view& sv) {
 		return sv.length;
 	}
@@ -64,14 +65,15 @@ namespace skeleton {
 	string_view slice(const char* ptr, size_t pos, size_t length) {
 		string_view ret;
 
-		ret.ptr s.c_str() + pos;
+		ret.ptr = ptr + pos;
 		ret.length = length;
+		ret.hash = hash(ret.ptr, ret.length);
 
 		return ret;
 	}
 
 	string_view slice(const string_view& sv, size_t pos, size_t length) {
-		assert(length(sv) >= pos + length);
+		assert(skeleton::length(sv) >= pos + length);
 
 		return slice(sv.ptr, pos, length);
 	}
