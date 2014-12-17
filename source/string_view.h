@@ -87,15 +87,42 @@ namespace skeleton {
 	}
 
 	int64_t to_int(const string_view& sv) {
-		return 0;
+		assert(sv.length > 0);
+
+		int64_t result = 0;
+		for(size_t i = 0; i < sv.length; ++i) {
+			result *= 10;
+			result += (int64_t)(*(sv.ptr + i) - '0');
+		}
+		return result;
 	}
 
 	uint64_t to_uint(const string_view& sv) {
-		return 0U;
+		assert(sv.length > 0);
+
+		uint64_t result = 0U;
+		for(size_t i = 0; i < sv.length; ++i) {
+			result *= 10U;
+			result += (uint64_t)(*(sv.ptr + i) - '0');
+		}
+		return result;
 	}
 
 	long double to_long_double(const string_view& sv) {
-		long double x = 0.0;
-		return x;
+		assert(sv.length > 0);
+
+		std::string str = std::string(sv.ptr, sv.length);
+		return std::stold(str);
+	}
+
+	char to_char(const string_view& sv) {
+		assert(sv.length > 0);
+
+		return *sv.ptr;
+	}
+
+	bool to_bool(const string_view& sv) {
+		assert(sv.length > 0);
+		return *sv.ptr == 't';
 	}
 }
