@@ -6,6 +6,7 @@
 
 namespace skeleton {
 	struct string_view {
+		string_view() : ptr(nullptr), length(0), hash(0) {}
 		const char* ptr;
 		size_t length;
 		size_t hash;

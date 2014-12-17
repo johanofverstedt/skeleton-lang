@@ -64,6 +64,56 @@ namespace skeleton {
 		token_char_literal,   // 'j'
 	};
 
+	const char* token_names[] = {
+		"import",
+		"def",
+		"yield",
+		"return",
+		"if",
+		"elif",
+		"else",
+		"for",
+		"while",
+		"struct",
+		"enum",
+		"mutable",
+		"using",
+		"=",
+		":",
+		":=",
+		"+",
+		"-",
+		"*",
+		"/",
+		"%%",
+		"::",
+		"==",
+		"!=",
+		"<",
+		">",
+		"<=",
+		">=",
+		"!",
+		"<-",
+		"->",
+		"(",
+		")",
+		"[",
+		"]",
+		"{",
+		"}",
+		";",
+		",",
+		".",
+		"..",
+		"identifier",
+		"integer",
+		"float",
+		"bool",
+		"string",
+		"char",
+	};
+
 	struct token {
 		token_id id;
 
@@ -74,7 +124,39 @@ namespace skeleton {
 		//Meta data
 		size_t line;
 		size_t col;
+
+		string_view identifier_name;
 	};
+
+	std::string to_string(const token& tok) {
+		std::string result;
+		//Special case
+		if(tok.id == token_identifier) {
+			result += "[Identifier '";
+			result += to_string(tok.identifier_name);
+			result += "']";
+		} else if(tok.id == token_int_literal) {
+			result += "[Int '";
+			result += to_string(tok.identifier_name);
+			result += "']";
+		} else if(tok.id == token_float_literal) {
+			result += "[Float '";
+			result += to_string(tok.identifier_name);
+			result += "']";
+		} else {
+			result += "['";
+			result += token_names[tok.id];
+			result += "']";
+		}
+
+		result += " @ Line: ";
+		result += std::to_string(tok.line);
+		result += " Col: ";
+		result += std::to_string(tok.col);
+		result += ". ";
+
+		return result;
+	}
 
 	struct lexer_error {
 		size_t pos;
@@ -92,28 +174,30 @@ namespace skeleton {
 		std::vector<token> tokens;
 		std::vector<lexer_error> errors;
 		std::vector<string_view> keywords;
+		std::vector<token_id> keyword_ids;
 	};
 
 	template <size_t N>
-	void lexer_add_keyword(lexer& the_lexer, const char (&kw)[N]) {
+	void lexer_add_keyword(lexer& the_lexer, const char (&kw)[N], token_id id) {
 		the_lexer.keywords.push_back(slice(kw, 0, N - 1));
+		the_lexer.keyword_ids.push_back(id);
 	}
 
 	inline
 	void lexer_add_keywords(lexer& the_lexer) {
 		the_lexer.keywords.reserve(11);
-		lexer_add_keyword(the_lexer, "def");
-		lexer_add_keyword(the_lexer, "import");
-		lexer_add_keyword(the_lexer, "struct");
-		lexer_add_keyword(the_lexer, "using");
-		lexer_add_keyword(the_lexer, "yield");
-		lexer_add_keyword(the_lexer, "return");
-		lexer_add_keyword(the_lexer, "if");
-		lexer_add_keyword(the_lexer, "else");
-		lexer_add_keyword(the_lexer, "elif");
-		lexer_add_keyword(the_lexer, "mutable");
-		lexer_add_keyword(the_lexer, "while");
-		lexer_add_keyword(the_lexer, "enum");
+		lexer_add_keyword(the_lexer, "def", token_def);
+		lexer_add_keyword(the_lexer, "import", token_import);
+		lexer_add_keyword(the_lexer, "struct", token_struct);
+		lexer_add_keyword(the_lexer, "using", token_using);
+		lexer_add_keyword(the_lexer, "yield", token_yield);
+		lexer_add_keyword(the_lexer, "return", token_return);
+		lexer_add_keyword(the_lexer, "if", token_if);
+		lexer_add_keyword(the_lexer, "else", token_else);
+		lexer_add_keyword(the_lexer, "elif", token_elif);
+		lexer_add_keyword(the_lexer, "mutable", token_mutable);
+		lexer_add_keyword(the_lexer, "while", token_while);
+		lexer_add_keyword(the_lexer, "enum", token_enum);
 	}
 
 	inline
@@ -211,7 +295,7 @@ namespace skeleton {
 		err.pos = begin_pos;
 		err.line = begin_line;
 		err.col = begin_col;
-		err.msg = "Unmatched opering of multi-line comment.";
+		err.msg = "Unmatched opening of multi-line comment.";
 
 		the_lexer.errors.push_back(err);
 	}
@@ -243,8 +327,16 @@ namespace skeleton {
 		tok.length = the_lexer.pos - tok.pos;
 
 		//Find out if the string matches one of the language keywords, otherwise report as identifier
-		string_view sv = slice(the_lexer.source, tok.pos, tok.length);
+		tok.identifier_name = slice(the_lexer.source, tok.pos, tok.length);
+		tok.id = token_identifier;
 
+		const auto sz = the_lexer.keywords.size();
+		for(size_t i = 0; i < sz; ++i) {
+			if(compare(tok.identifier_name, the_lexer.keywords[i])) {
+				tok.id = the_lexer.keyword_ids[i];
+				break;
+			}
+		}
 
 		lexer_add_token(the_lexer, tok);
 	}
@@ -269,6 +361,7 @@ namespace skeleton {
 				{
 					if(second_char == '=') {
 						tok.id = token_op_eq;
+						advance(the_lexer, second_char);
 					} else {
 						tok.id = token_op_assign;
 					}
@@ -278,8 +371,10 @@ namespace skeleton {
 				{
 					if(second_char == '=') {
 						tok.id = token_op_less_or_eq;
+						advance(the_lexer, second_char);
 					} else if(second_char == '-') {
 						tok.id = token_op_in;
+						advance(the_lexer, second_char);
 					} else {
 						tok.id = token_op_less;
 					}
@@ -289,6 +384,7 @@ namespace skeleton {
 				{
 					if(second_char == '=') {
 						tok.id = token_op_greater_or_eq;
+						advance(the_lexer, second_char);
 					} else {
 						tok.id = token_op_greater;
 					}
@@ -298,6 +394,7 @@ namespace skeleton {
 				{
 					if(second_char == '=') {
 						tok.id = token_op_neq;
+						advance(the_lexer, second_char);
 					} else {
 						tok.id = token_op_not;
 					}
@@ -310,6 +407,7 @@ namespace skeleton {
 				{
 					if(second_char == '.') {
 						tok.id = token_range;
+						advance(the_lexer, second_char);
 					} else {
 						tok.id = token_period;
 					}
@@ -319,8 +417,10 @@ namespace skeleton {
 				{
 					if(second_char == '=') {
 						tok.id = token_op_decl_assign;
+						advance(the_lexer, second_char);
 					} else if(second_char == ':') {
 						tok.id = token_op_concat;
+						advance(the_lexer, second_char);
 					} else {
 						tok.id = token_op_type_spec;
 					}
@@ -351,6 +451,7 @@ namespace skeleton {
 				{
 					if(second_char == '>') {
 						tok.id = token_op_to;
+						advance(the_lexer, second_char);
 					} else {
 						tok.id = token_op_sub;
 					}
@@ -388,6 +489,83 @@ namespace skeleton {
 
 		tok.length = the_lexer.pos - tok.pos;
 		lexer_add_token(the_lexer, tok);
+	}
+
+	inline
+	void lex_numeric_literal(lexer& the_lexer) {
+		token tok;
+		tok.pos = the_lexer.pos;
+		tok.line = the_lexer.line;
+		tok.col = the_lexer.col;
+
+		bool is_float = false;
+
+		while(!is_eof(the_lexer)) {
+			char c = get_char(the_lexer);
+
+			bool found = false;			
+			switch(c) {
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+					advance(the_lexer, c);
+					found = true;
+					break;
+			}
+
+			if(!found)
+				break;
+		}
+
+		if(!is_eof(the_lexer)) {
+			char c = get_char(the_lexer);
+
+			if(c == '.') {
+				is_float = true;
+				advance(the_lexer, c);
+			}
+		}
+
+		while(!is_eof(the_lexer)) {
+			char c = get_char(the_lexer);
+
+			bool found = false;			
+			switch(c) {
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+					advance(the_lexer, c);
+					found = true;
+					break;
+			}
+
+			if(!found)
+				break;
+		}
+
+		tok.length = the_lexer.pos - tok.pos;
+		if(is_float) {
+			tok.id = token_float_literal;
+		} else {
+			tok.id = token_int_literal;
+		}
+		tok.identifier_name = slice(the_lexer.source, tok.pos, tok.length);
+
+		lexer_add_token(the_lexer, tok);		
 	}
 
 	inline
@@ -478,7 +656,7 @@ namespace skeleton {
 				case 'y':
 				case 'z':
 				case '_':
-					advance(res, c);
+                    lex_identifier(res);
 					break;
 
 				//Numeric literals
@@ -492,7 +670,7 @@ namespace skeleton {
 				case '7':
 				case '8':
 				case '9':
-					advance(res, c);
+					lex_numeric_literal(res);
 					break;
 
 				//String literals
