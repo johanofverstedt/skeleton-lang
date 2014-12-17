@@ -21,6 +21,11 @@ namespace skeleton {
 		token_mutable,   // mutable
 		token_using,     // using
 		token_namespace, // namespace
+		token_cast,      // cast
+		token_switch,    // switch
+		token_case,      // case
+		token_break,     // break
+		token_continue,  // continue
 
 		//Operators
 		token_op_assign,      // =
@@ -81,6 +86,11 @@ namespace skeleton {
 		"mutable",
 		"using",
 		"namespace",
+		"cast",
+		"switch",
+		"case",
+		"break",
+		"continue",
 		"=",
 		":",
 		":=",
@@ -218,6 +228,7 @@ namespace skeleton {
 		lexer_add_keyword(the_lexer, "false", token_bool_literal);
 		lexer_add_keyword(the_lexer, "true", token_bool_literal);
 		lexer_add_keyword(the_lexer, "namespace", token_namespace);
+		lexer_add_keyword(the_lexer, "cast", token_cast);
 	}
 
 	inline
