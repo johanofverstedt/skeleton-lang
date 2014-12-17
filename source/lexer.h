@@ -7,19 +7,20 @@
 namespace skeleton {
 	enum token_id {
 		//Keywords
-		token_import,  // #import
-		token_def,     // def
-		token_yield,   // yield
-		token_return,  // return
-		token_if,      // if
-		token_elif,    // elif
-		token_else,    // else
-		token_for,     // for
-		token_while,   // while
-		token_struct,  // struct
-		token_enum,    // enum
-		token_mutable, // mutable
-		token_using,   // using
+		token_import,    // #import
+		token_def,       // def
+		token_yield,     // yield
+		token_return,    // return
+		token_if,        // if
+		token_elif,      // elif
+		token_else,      // else
+		token_for,       // for
+		token_while,     // while
+		token_struct,    // struct
+		token_enum,      // enum
+		token_mutable,   // mutable
+		token_using,     // using
+		token_namespace, // namespace
 
 		//Operators
 		token_op_assign,      // =
@@ -54,6 +55,7 @@ namespace skeleton {
 		token_comma,           // ,
 		token_period,          // .
 		token_range,           // ..
+		token_unspecified,     // ...
 
 		//Other tokens
 		token_identifier,     // some_ident0
@@ -78,6 +80,7 @@ namespace skeleton {
 		"enum",
 		"mutable",
 		"using",
+		"namespace",
 		"=",
 		":",
 		":=",
@@ -106,6 +109,7 @@ namespace skeleton {
 		",",
 		".",
 		"..",
+		"...",
 		"identifier",
 		"integer",
 		"float",
@@ -132,27 +136,27 @@ namespace skeleton {
 		std::string result;
 		//Special case
 		if(tok.id == token_identifier) {
-			result += "[Identifier '";
+			result += "[identifier '";
 			result += to_string(tok.identifier_name);
 			result += "']";
 		} else if(tok.id == token_int_literal) {
-			result += "[Int '";
+			result += "[integer '";
 			result += to_string(tok.identifier_name);
 			result += "']";
 		} else if(tok.id == token_float_literal) {
-			result += "[Float '";
+			result += "[float '";
 			result += to_string(tok.identifier_name);
 			result += "']";
 		} else if(tok.id == token_string_literal) {
-			result += "[String '";
+			result += "[string '";
 			result += to_string(tok.identifier_name);
 			result += "']";
 		} else if(tok.id == token_char_literal) {
-			result += "[Char '";
+			result += "[char '";
 			result += to_string(tok.identifier_name);
 			result += "']";
 		} else if(tok.id == token_bool_literal) {
-			result += "[Bool '";
+			result += "[bool '";
 			result += to_string(tok.identifier_name);
 			result += "']";
 		} else {
@@ -197,7 +201,7 @@ namespace skeleton {
 
 	inline
 	void lexer_add_keywords(lexer& the_lexer) {
-		the_lexer.keywords.reserve(14);
+		the_lexer.keywords.reserve(15);
 		lexer_add_keyword(the_lexer, "def", token_def);
 		lexer_add_keyword(the_lexer, "import", token_import);
 		lexer_add_keyword(the_lexer, "for", token_for);
@@ -213,6 +217,7 @@ namespace skeleton {
 		lexer_add_keyword(the_lexer, "enum", token_enum);
 		lexer_add_keyword(the_lexer, "false", token_bool_literal);
 		lexer_add_keyword(the_lexer, "true", token_bool_literal);
+		lexer_add_keyword(the_lexer, "namespace", token_namespace);
 	}
 
 	inline
@@ -423,6 +428,10 @@ namespace skeleton {
 					if(second_char == '.') {
 						tok.id = token_range;
 						advance(the_lexer, second_char);
+						if(!is_eof(the_lexer) && get_char(the_lexer) == '.') {
+							tok.id = token_unspecified;
+							advance(the_lexer, '.');
+						}
 					} else {
 						tok.id = token_period;
 					}
