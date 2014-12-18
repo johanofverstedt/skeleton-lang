@@ -37,6 +37,7 @@ namespace skeleton {
 		token_op_div,         // /
 		token_op_mod,         // %
 		token_op_concat,      // ::
+		token_op_power,		  // ^
 
 		//Logic operators
 		token_op_eq,            // ==
@@ -46,6 +47,12 @@ namespace skeleton {
 		token_op_less_or_eq,    // <=
 		token_op_greater_or_eq, // >=
 		token_op_not,           // !
+		token_op_and,			// &&
+		token_op_or,			// ||
+		token_op_bw_and,		// &
+		token_op_bw_or,			// |
+		token_op_bw_xor,		// |||
+
 		token_op_in,            // <-
 		token_op_to,            // ->
 
@@ -100,6 +107,7 @@ namespace skeleton {
 		"/",
 		"%%",
 		"::",
+		"^",
 		"==",
 		"!=",
 		"<",
@@ -107,6 +115,11 @@ namespace skeleton {
 		"<=",
 		">=",
 		"!",
+		"&&",
+		"||",
+		"&",
+		"|",
+		"|||",
 		"<-",
 		"->",
 		"(",
@@ -431,6 +444,31 @@ namespace skeleton {
 					}
 				}
 				break;
+			case '&':
+				{
+					if(second_char == '&') {
+						tok.id = token_op_and;
+						advance(the_lexer, second_char);
+					} else {
+						tok.id = token_op_bw_and;
+					}
+				}
+				break;
+			case '|':
+				{
+					if(second_char == '|') {
+						advance(the_lexer, '|');
+						if(!is_eof(the_lexer) && get_char(the_lexer) == '|') {
+							tok.id = token_op_bw_xor;
+							advance(the_lexer, second_char);
+						} else {
+							tok.id = token_op_or;
+						}
+					} else {
+						tok.id = token_op_bw_or;
+					}
+				}
+				break;
 			case ',':
 				tok.id = token_comma;
 				break;
@@ -512,6 +550,9 @@ namespace skeleton {
 				break;
 			case '%':
 				tok.id = token_op_mod;
+				break;
+			case '^':
+				tok.id = token_op_power;
 				break;
 			case ';':
 				tok.id = token_semicolon;
@@ -807,9 +848,12 @@ namespace skeleton {
 				case '<':
 				case '>':
 				case '!':
+				case '&':
+				case '|':
 				case ',':
 				case '.':
 				case ':':
+				case '^':
 				case '(':
 				case ')':
 				case '[':
