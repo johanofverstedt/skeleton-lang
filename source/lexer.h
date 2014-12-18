@@ -18,14 +18,18 @@ namespace skeleton {
 		token_while,     // while
 		token_struct,    // struct
 		token_enum,      // enum
+		token_ref,		 // ref
 		token_mutable,   // mutable
 		token_using,     // using
 		token_namespace, // namespace
 		token_cast,      // cast
+		token_alloc,     // alloc
+		token_free,      // free
 		token_switch,    // switch
 		token_case,      // case
 		token_break,     // break
 		token_continue,  // continue
+		token_assert,    // assert
 
 		//Operators
 		token_op_assign,      // =
@@ -90,14 +94,18 @@ namespace skeleton {
 		"while",
 		"struct",
 		"enum",
+		"ref",
 		"mutable",
 		"using",
 		"namespace",
 		"cast",
+		"alloc",
+		"free",
 		"switch",
 		"case",
 		"break",
 		"continue",
+		"assert",
 		"=",
 		":",
 		":=",
@@ -224,7 +232,7 @@ namespace skeleton {
 
 	inline
 	void lexer_add_keywords(lexer& the_lexer) {
-		the_lexer.keywords.reserve(15);
+		the_lexer.keywords.reserve(22);
 		lexer_add_keyword(the_lexer, "def", token_def);
 		lexer_add_keyword(the_lexer, "import", token_import);
 		lexer_add_keyword(the_lexer, "for", token_for);
@@ -235,6 +243,7 @@ namespace skeleton {
 		lexer_add_keyword(the_lexer, "if", token_if);
 		lexer_add_keyword(the_lexer, "else", token_else);
 		lexer_add_keyword(the_lexer, "elif", token_elif);
+		lexer_add_keyword(the_lexer, "ref", token_ref);
 		lexer_add_keyword(the_lexer, "mutable", token_mutable);
 		lexer_add_keyword(the_lexer, "while", token_while);
 		lexer_add_keyword(the_lexer, "enum", token_enum);
@@ -242,6 +251,13 @@ namespace skeleton {
 		lexer_add_keyword(the_lexer, "true", token_bool_literal);
 		lexer_add_keyword(the_lexer, "namespace", token_namespace);
 		lexer_add_keyword(the_lexer, "cast", token_cast);
+		lexer_add_keyword(the_lexer, "alloc", token_alloc);
+		lexer_add_keyword(the_lexer, "free", token_free);
+		lexer_add_keyword(the_lexer, "switch", token_switch);
+		lexer_add_keyword(the_lexer, "case", token_case);
+		lexer_add_keyword(the_lexer, "break", token_break);
+		lexer_add_keyword(the_lexer, "continue", token_continue);
+		lexer_add_keyword(the_lexer, "assert", token_assert);
 	}
 
 	inline

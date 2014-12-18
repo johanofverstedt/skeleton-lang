@@ -56,8 +56,8 @@ namespace skeleton {
 		};
 
 		struct ast_expr {
-			int64_t type_index;
-			int64_t value_index;
+			size_t type_index;
+			size_t value_index;
 
 			union {
 				std::vector<ast*> children;
