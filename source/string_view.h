@@ -5,12 +5,15 @@
 #include <stdint.h>
 #include <assert.h>
 
+#define FMV_OFFSET 14695981039346656037ULL
+#define FMV_PRIME 1099511628211ULL
+
 namespace skeleton {
 	struct string_view {
 		string_view() : ptr(nullptr), length(0), hash(0) {}
 		const char* ptr;
+		uint64_t hash;
 		size_t length;
-		size_t hash;
 	};
 
 	struct string_hash_map {
@@ -21,12 +24,21 @@ namespace skeleton {
 		string_view data[65535];
 	};
 
-	size_t hash(const char* ptr, size_t len) {
-		size_t hc = 0;
+	//This hash function only works properly for little endian architectures
+	inline
+	uint64_t hash(const char* ptr, size_t len) {
+		uint64_t hc = FMV_OFFSET;
+		unsigned char* hc_char_ptr = (unsigned char*)&hc;
 		for(size_t i = 0; i < len; ++i) {
-			hc += (i + 15) * ptr[i];
+			hc *= FMV_PRIME;
+			(*hc_char_ptr) ^= (unsigned char)ptr[i];
 		}
 		return hc;
+	}
+
+	inline
+	void hash_string_view(string_view& sv) {
+		sv.hash = hash(sv.ptr, sv.length);
 	}
 /*
 	string_view& add(string_hash_map& hm, const string_view& sv) {
@@ -60,30 +72,42 @@ namespace skeleton {
 		return sv.length;
 	}
 
+	inline
+	const char* begin(const string_view& sv) {
+		return sv.ptr;
+	}
+	inline
+	const char* end(const string_view& sv) {
+		return sv.ptr + sv.length;
+	}
+
 	std::string to_string(const string_view& sv) {
 		return std::string(sv.ptr, sv.length);
 	}
 
-	string_view slice(const char* ptr, size_t pos, size_t length) {
+	string_view slice(const char* ptr, size_t pos, size_t length, bool do_hash = true) {
 		string_view ret;
 
 		ret.ptr = ptr + pos;
 		ret.length = length;
-		ret.hash = hash(ret.ptr, ret.length);
+		if(do_hash)
+			hash_string_view(ret);
+		else
+			ret.hash = 0ULL;
 
 		return ret;
 	}
 
-	string_view slice(const string_view& sv, size_t pos, size_t length) {
+	string_view slice(const string_view& sv, size_t pos, size_t length, bool do_hash = true) {
 		assert(skeleton::length(sv) >= pos + length);
 
-		return slice(sv.ptr, pos, length);
+		return slice(sv.ptr, pos, length, do_hash);
 	}
 
-	string_view slice(const std::string& s, size_t pos, size_t length) {
+	string_view slice(const std::string& s, size_t pos, size_t length, bool do_hash = true) {
 		assert(s.length() >= pos + length);
 
-		return slice(s.c_str(), pos, length);
+		return slice(s.c_str(), pos, length, do_hash);
 	}
 
 	int64_t to_int(const string_view& sv) {
