@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "string_view.h"
+#include "string_table.h"
 
 namespace skeleton {
 	enum token_id {
@@ -154,41 +155,51 @@ namespace skeleton {
 
 		//Source pos
 		size_t pos;
-		size_t length;
 
 		//Meta data
 		size_t line;
 		size_t col;
 
-		string_view identifier_name;
+		union {
+			string_table_id identifier_name;
+			uint64_t int_literal_value;
+			long double float_literal_value;
+		};
 	};
 
-	std::string to_string(const token& tok) {
+	std::string to_string(const string_table &table, const token& tok) {
 		std::string result;
+        
 		//Special case
 		if(tok.id == token_identifier) {
+            string_view sv = get(table, tok.identifier_name);
 			result += "[identifier '";
-			result += to_string(tok.identifier_name);
+			result += to_string(sv);
 			result += "']";
 		} else if(tok.id == token_int_literal) {
+            string_view sv = get(table, tok.identifier_name);
 			result += "[integer '";
-			result += to_string(tok.identifier_name);
+			result += to_string(sv);
 			result += "']";
 		} else if(tok.id == token_float_literal) {
+            string_view sv = get(table, tok.identifier_name);
 			result += "[float '";
-			result += to_string(tok.identifier_name);
+			result += to_string(sv);
 			result += "']";
 		} else if(tok.id == token_string_literal) {
+            string_view sv = get(table, tok.identifier_name);
 			result += "[string '";
-			result += to_string(tok.identifier_name);
+			result += to_string(sv);
 			result += "']";
 		} else if(tok.id == token_char_literal) {
+            string_view sv = get(table, tok.identifier_name);
 			result += "[char '";
-			result += to_string(tok.identifier_name);
+			result += to_string(sv);
 			result += "']";
 		} else if(tok.id == token_bool_literal) {
+            string_view sv = get(table, tok.identifier_name);
 			result += "[bool '";
-			result += to_string(tok.identifier_name);
+			result += to_string(sv);
 			result += "']";
 		} else {
 			result += "['";
@@ -218,21 +229,25 @@ namespace skeleton {
 		size_t line;
 		size_t col;
 
+		string_table* str_table;
 		std::vector<token> tokens;
 		std::vector<lexer_error> errors;
-		std::vector<string_view> keywords;
+		std::vector<string_table_id> keywords;
 		std::vector<token_id> keyword_ids;
 	};
 
 	template <size_t N>
 	void lexer_add_keyword(lexer& the_lexer, const char (&kw)[N], token_id id) {
-		the_lexer.keywords.push_back(slice(kw, 0, N - 1));
+		string_view sv = slice(kw, 0, N - 1);
+		the_lexer.keywords.push_back(add(*the_lexer.str_table, sv));
 		the_lexer.keyword_ids.push_back(id);
 	}
 
 	inline
 	void lexer_add_keywords(lexer& the_lexer) {
 		the_lexer.keywords.reserve(22);
+		the_lexer.keyword_ids.reserve(22);
+
 		lexer_add_keyword(the_lexer, "def", token_def);
 		lexer_add_keyword(the_lexer, "import", token_import);
 		lexer_add_keyword(the_lexer, "for", token_for);
@@ -384,15 +399,15 @@ namespace skeleton {
 			advance(the_lexer, c);
 		}
 
-		tok.length = the_lexer.pos - tok.pos;
+		auto len = the_lexer.pos - tok.pos;
 
 		//Find out if the string matches one of the language keywords, otherwise report as identifier
-		tok.identifier_name = slice(the_lexer.source, tok.pos, tok.length);
+		tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
 		tok.id = token_identifier;
 
 		const auto sz = the_lexer.keywords.size();
 		for(size_t i = 0; i < sz; ++i) {
-			if(compare(tok.identifier_name, the_lexer.keywords[i])) {
+			if(tok.identifier_name == the_lexer.keywords[i]) {
 				tok.id = the_lexer.keyword_ids[i];
 				break;
 			}
@@ -579,7 +594,6 @@ namespace skeleton {
 				break;
 		}
 
-		tok.length = the_lexer.pos - tok.pos;
 		lexer_add_token(the_lexer, tok);
 	}
 
@@ -649,13 +663,13 @@ namespace skeleton {
 				break;
 		}
 
-		tok.length = the_lexer.pos - tok.pos;
+        auto len = the_lexer.pos - tok.pos;
 		if(is_float) {
 			tok.id = token_float_literal;
 		} else {
 			tok.id = token_int_literal;
 		}
-		tok.identifier_name = slice(the_lexer.source, tok.pos, tok.length);
+		tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
 
 		lexer_add_token(the_lexer, tok);		
 	}
@@ -680,7 +694,9 @@ namespace skeleton {
 		}
 
 		tok.id = token_string_literal;
-		tok.identifier_name = slice(the_lexer.source, tok.pos, the_lexer.pos - tok.pos);
+        auto len = the_lexer.pos - tok.pos;
+        tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
+//		tok.identifier_name = slice(the_lexer.source, tok.pos, the_lexer.pos - tok.pos);
 
 		char post = '\0';
 		if(!is_eof(the_lexer)) {
@@ -736,8 +752,10 @@ namespace skeleton {
 			return;
 		}
 
+        auto len = 1;
 		tok.id = token_char_literal;
-		tok.identifier_name = slice(the_lexer.source, tok.pos, the_lexer.pos - tok.pos);
+        tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
+        //tok.identifier_name = slice(the_lexer.source, tok.pos, the_lexer.pos - tok.pos);
 
 		the_lexer.tokens.push_back(tok);
 
@@ -745,8 +763,10 @@ namespace skeleton {
 	}
 
 	inline
-	lexer lex(std::string str) {
+	lexer lex(std::string str, string_table &str_table) {
 		lexer res;
+        
+        res.str_table = &str_table;
 
 		res.source = str;
 		res.pos = 0;

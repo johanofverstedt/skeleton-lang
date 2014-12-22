@@ -10,18 +10,10 @@
 
 namespace skeleton {
 	struct string_view {
-		string_view() : ptr(nullptr), length(0), hash(0) {}
-		const char* ptr;
+		string_view() : hash(0), ptr(nullptr), length(0) {}
 		uint64_t hash;
+		const char* ptr;
 		size_t length;
-	};
-
-	struct string_hash_map {
-		string_hash_map() {
-			for(size_t i = 0; i < 65535; ++i)
-				data[i] = {};
-		}
-		string_view data[65535];
 	};
 
 	//This hash function only works properly for little endian architectures
@@ -33,26 +25,16 @@ namespace skeleton {
 			hc *= FMV_PRIME;
 			(*hc_char_ptr) ^= (unsigned char)ptr[i];
 		}
-		return hc;
+        return hc;
 	}
 
 	inline
 	void hash_string_view(string_view& sv) {
 		sv.hash = hash(sv.ptr, sv.length);
 	}
-/*
-	string_view& add(string_hash_map& hm, const string_view& sv) {
-		auto hc = hash(sv.ptr, sv.length) & 65535;
 
-		if(data[hc].ptr) {
-			if(compare(data[hc], sv)) {
-
-			}
-		}
-	}
-*/
 	bool compare(const string_view& x, const string_view& y) {
-		if(x.hash != y.hash)
+		if((x.hash != 0 && y.hash != 0) && x.hash != y.hash)
 			return false;
 
 		auto x_len = x.length;

@@ -12,14 +12,15 @@ int main(int argc, char **argv) {
 	                          "    return true;\n}\n\nnamespace test_ns {}";
 
 	std::string test_source = test_string;
+    string_table str_table;
 
 	std::cout << "<Test program to lex>:" << std::endl << test_source << std::endl;
 
-	lexer the_lexer = lex(test_source);
+	lexer the_lexer = lex(test_source, str_table);
 
 	//for(size_t i = 0; i < the_lexer.tokens.size(); ++i) {
 	for(auto tok : the_lexer.tokens) {
-		std::cout << to_string(tok) << std::endl;
+		std::cout << to_string(*the_lexer.str_table, tok) << std::endl;
 	}
 
 	if(the_lexer.errors.size() > 0) {
@@ -27,6 +28,24 @@ int main(int argc, char **argv) {
 			std::cout << "Syntax error: " << err.msg << " at line: " << err.line << ", col: " << err.col << std::endl;
 		} 
 	}
+    
+    print_string_table(*the_lexer.str_table);
+/*
+	string_table st;
 
+	add(st, "def");
+	add(st, "x");
+	add(st, "int");
+	add(st, "float32");
+	add(st, "float64");
+	add(st, "float64");
+	add(st, "float65");
+	add(st, "gloat65");
+    add(st, "hloat65");
+    add(st, "hloat66");
+    add(st, "hloat67");
+
+	print_string_table(st);
+*/
 	return 0;
 }

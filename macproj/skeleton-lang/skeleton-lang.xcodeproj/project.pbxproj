@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9429217D1A41A30A005316B8 /* test_lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9429217C1A41A30A005316B8 /* test_lexer.cpp */; };
+		94A536E91A4883240088176F /* program_master.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94A536E71A4883240088176F /* program_master.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,6 +28,10 @@
 		9429217C1A41A30A005316B8 /* test_lexer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = test_lexer.cpp; path = ../../source/test_programs/test_lexer.cpp; sourceTree = "<group>"; };
 		9429217E1A41A8F1005316B8 /* lexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = lexer.h; path = ../../source/lexer.h; sourceTree = "<group>"; };
 		9429217F1A41A8F1005316B8 /* string_view.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = string_view.h; path = ../../source/string_view.h; sourceTree = "<group>"; };
+		94A536E51A4882E30088176F /* string_table.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = string_table.h; path = ../../source/string_table.h; sourceTree = "<group>"; };
+		94A536E61A4883240088176F /* ast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ast.h; path = ../../source/ast.h; sourceTree = "<group>"; };
+		94A536E71A4883240088176F /* program_master.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = program_master.cpp; path = ../../source/program_master.cpp; sourceTree = "<group>"; };
+		94A536E81A4883240088176F /* program_master.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = program_master.h; path = ../../source/program_master.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,7 +52,11 @@
 				9429217C1A41A30A005316B8 /* test_lexer.cpp */,
 				9429217E1A41A8F1005316B8 /* lexer.h */,
 				9429217F1A41A8F1005316B8 /* string_view.h */,
+				94A536E51A4882E30088176F /* string_table.h */,
 				942921731A41A2F8005316B8 /* Products */,
+				94A536E61A4883240088176F /* ast.h */,
+				94A536E71A4883240088176F /* program_master.cpp */,
+				94A536E81A4883240088176F /* program_master.h */,
 			);
 			sourceTree = "<group>";
 		};
@@ -122,6 +131,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				94A536E91A4883240088176F /* program_master.cpp in Sources */,
 				9429217D1A41A30A005316B8 /* test_lexer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -236,6 +246,7 @@
 				9429217B1A41A2F8005316B8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
