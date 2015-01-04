@@ -1,4 +1,12 @@
 
+/**
+ *  string_table.h
+ *
+ *  A prototype hash-table with the property that nothing ever gets relocated.
+ *  Therefore the string_table_id of an added string will remain for the life-time
+ *  of the table.
+ */
+
 #pragma once
 
 #include "string_view.h"
