@@ -31,6 +31,7 @@ namespace skeleton {
 		token_break,     // break
 		token_continue,  // continue
 		token_assert,    // assert
+		token_atomic,    // atomic
 
 		//Operators
 		token_op_assign,      // =
@@ -107,6 +108,7 @@ namespace skeleton {
 		"break",
 		"continue",
 		"assert",
+		"atomic",
 		"=",
 		":",
 		":=",
@@ -164,6 +166,7 @@ namespace skeleton {
 			string_table_id identifier_name;
 			uint64_t int_literal_value;
 			long double float_literal_value;
+			char char_literal_value;
 		};
 	};
 
@@ -177,14 +180,14 @@ namespace skeleton {
 			result += to_string(sv);
 			result += "']";
 		} else if(tok.id == token_int_literal) {
-            string_view sv = get(table, tok.identifier_name);
+            //string_view sv = get(table, tok.identifier_name);
 			result += "[integer '";
-			result += to_string(sv);
+            result += std::to_string(tok.int_literal_value);
 			result += "']";
 		} else if(tok.id == token_float_literal) {
-            string_view sv = get(table, tok.identifier_name);
+            //string_view sv = get(table, tok.identifier_name);
 			result += "[float '";
-			result += to_string(sv);
+            result += std::to_string(tok.float_literal_value);
 			result += "']";
 		} else if(tok.id == token_string_literal) {
             string_view sv = get(table, tok.identifier_name);
@@ -192,9 +195,8 @@ namespace skeleton {
 			result += to_string(sv);
 			result += "']";
 		} else if(tok.id == token_char_literal) {
-            string_view sv = get(table, tok.identifier_name);
 			result += "[char '";
-			result += to_string(sv);
+			result += tok.char_literal_value;
 			result += "']";
 		} else if(tok.id == token_bool_literal) {
             string_view sv = get(table, tok.identifier_name);
@@ -245,8 +247,8 @@ namespace skeleton {
 
 	inline
 	void lexer_add_keywords(lexer& the_lexer) {
-		the_lexer.keywords.reserve(22);
-		the_lexer.keyword_ids.reserve(22);
+		the_lexer.keywords.reserve(23);
+		the_lexer.keyword_ids.reserve(23);
 
 		lexer_add_keyword(the_lexer, "def", token_def);
 		lexer_add_keyword(the_lexer, "import", token_import);
@@ -273,6 +275,7 @@ namespace skeleton {
 		lexer_add_keyword(the_lexer, "break", token_break);
 		lexer_add_keyword(the_lexer, "continue", token_continue);
 		lexer_add_keyword(the_lexer, "assert", token_assert);
+		lexer_add_keyword(the_lexer, "atomic", token_atomic);
 	}
 
 	inline
@@ -666,10 +669,12 @@ namespace skeleton {
         auto len = the_lexer.pos - tok.pos;
 		if(is_float) {
 			tok.id = token_float_literal;
+			tok.float_literal_value = to_long_double(slice(the_lexer.source, tok.pos, len));
 		} else {
 			tok.id = token_int_literal;
+			tok.int_literal_value = to_uint(slice(the_lexer.source, tok.pos, len));
 		}
-		tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
+		//tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
 
 		lexer_add_token(the_lexer, tok);		
 	}
@@ -752,10 +757,9 @@ namespace skeleton {
 			return;
 		}
 
-        auto len = 1;
 		tok.id = token_char_literal;
-        tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
-        //tok.identifier_name = slice(the_lexer.source, tok.pos, the_lexer.pos - tok.pos);
+		tok.char_literal_value = the_lexer.source[tok.pos];
+        //tok.identifier_name = add(*the_lexer.str_table, slice(the_lexer.source, tok.pos, len));
 
 		the_lexer.tokens.push_back(tok);
 
