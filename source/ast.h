@@ -1,14 +1,17 @@
 
 #pragma once
 
+#include <vector>
 #include <stdint.h>
+#include "lexer.h"
+#include "string_table.h"
 #include "string_view.h"
 
 namespace skeleton {
 	namespace ast {
 		enum type_id_enum {
+			type_id_unknown,
 			type_id_bool,
-			type_id_char,
 			type_id_s8,
 			type_id_u8,
 			type_id_s16,
@@ -17,8 +20,6 @@ namespace skeleton {
 			type_id_u32,
 			type_id_s64,
 			type_id_u64,
-			type_id_int,
-			type_id_uint,
 			type_id_float32,
 			type_id_float64,
 			type_id_string,
@@ -43,26 +44,43 @@ namespace skeleton {
 			ast_node_control_flow,
 		};
 
-		//
-		// Base class for all entities in the AST.
-		//
-		struct ast_node {
-			ast_node_type_enum node_type;
+		//Expressions
+
+		struct ast_unary_operator {
+			ast_expr* operand;
 		};
 
-		struct ast_value {
-			ast_type type;
+		struct ast_binary_operator {
+			ast_expr* left;
+			ast_expr* right;
+		};
 
+		struct ast_func_call {
+			string_table_id name;
+			std::vector<ast_expr> arg;
+		};
+
+		struct ast_variable {
+			string_table_id name;
 		};
 
 		struct ast_expr {
-			size_t type_index;
-			size_t value_index;
-
+			ast_type result_type;
 			union {
-				std::vector<ast*> children;
-
+				ast_unary_operator unary_op;
+				ast_binary_operator binary_op;
+				ast_func_call func_call;
+				ast_variable variable;
 			};
 		};
+
+
+
+		struct ast_declaration {
+			std::vector<ast_declaration> declarations;
+			std::vector<ast_statement> statements;
+		};
+
+
 	}
 }
