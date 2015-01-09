@@ -29,7 +29,8 @@ namespace skeleton {
 
 		struct ast_type {
 			type_id_enum id;
-			string_view type_name;
+			string_table_id type_name;
+			ast_type* sub_type;
 		};
 
 		enum ast_node_type_enum {
